@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
+from pathlib import Path
 
 # --------------------------------------------------
 # Page config
@@ -47,15 +48,15 @@ for target, foots in CATEGORIES.items():
 # --------------------------------------------------
 def load_sample_data():
     data = [
-        ["김선수", "얼굴", "앞발", "빠른발", 1, "공격형", "앞발 빠른발", "8년"],
-        ["김선수", "몸통", "앞발", "앞발", 1, "공격형", "앞발 빠른발", "8년"],
-        ["이선수", "몸통", "뒷발", "돌려차기", 1, "수비형", "뒷발 돌려차기", "10년"],
-        ["이선수", "얼굴", "뒷발", "돌려차기", 0, "수비형", "뒷발 돌려차기", "10년"],
-        ["박선수", "얼굴", "앞발", "빠른발", 1, "혼합형", "속임 동작", "6년"],
+        ["김선수", "얼굴", "앞발", "빠른발", 1, "공격형", "앞발 빠른발", "8년", "kim.png"],
+        ["김선수", "몸통", "앞발", "앞발", 1, "공격형", "앞발 빠른발", "8년", "kim.png"],
+        ["이선수", "몸통", "뒷발", "돌려차기", 1, "수비형", "뒷발 돌려차기", "10년", "lee.png"],
+        ["이선수", "얼굴", "뒷발", "돌려차기", 0, "수비형", "뒷발 돌려차기", "10년", "lee.png"],
+        ["박선수", "얼굴", "앞발", "빠른발", 1, "혼합형", "속임 동작", "6년", "park.png"],
     ]
     return pd.DataFrame(
         data,
-        columns=["athlete", "target", "foot", "technique", "success", "style", "signature", "career"]
+        columns=["athlete", "target", "foot", "technique", "success", "style", "signature", "career", "photo"]
     )
 
 # --------------------------------------------------
@@ -129,9 +130,22 @@ if selected:
     fig = draw_radar(scores, selected)
     st.plotly_chart(fig, use_container_width=True)
 
-    st.subheader("선수 프로파일 요약")
-    profile_cols = ["athlete", "style", "signature", "career"]
-    st.dataframe(df[profile_cols].drop_duplicates(), use_container_width=True)
+    st.subheader("선수 프로파일")
+
+    cols = st.columns(len(selected))
+    for col, name in zip(cols, selected):
+        with col:
+            row = df[df["athlete"] == name].iloc[0]
+            photo_path = Path("images") / row["photo"]
+            if photo_path.exists():
+                st.image(str(photo_path), use_container_width=True)
+            else:
+                st.image("https://via.placeholder.com/200x250?text=No+Image")
+
+            st.markdown(f"**{name}**")
+            st.markdown(f"스타일: {row['style']}")
+            st.markdown(f"주특기: {row['signature']}")
+            st.markdown(f"경력: {row['career']}")
 
     st.subheader("선수별 기술 점수")
     table = []
